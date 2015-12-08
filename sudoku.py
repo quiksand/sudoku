@@ -42,37 +42,71 @@ class Sudoku(object):
         # main seed function
         # go through board cell by cell
         for row in range(self.length):
-            # used_row = []
-            for col in range(self.length):
-                # loop through unused numbers for a given row
-                skip = 0
-                for num in self.unused[row]:
-                    # check if the number can go in that column and square
-                    # if it can't, continue to next number in unused
-                    print("skip", skip)
-                    if(self.check_col(num, self.v_rows[col])):
-                        skip += 1
-                        if((skip + col) == self.length):
-                            print("zero at: ({},{})".format(row,col))
-                        continue
-                    if(self.check_square(num, row, col)):
-                        skip += 1
-                        if((skip + col) == self.length):
-                            print("zero at: ({},{})".format(row,col))
-                        continue
-                    # if number passes tests, insert it into row and column,
-                    # remove the number from unused (since it is now used),
-                    # break the loop through unused, go to next col, space
-                    self.h_rows[row][col] = num
-                    self.unused[row].remove(num)
-                    skip = 0
+
+            temp_arr = self.unused[row]
+            restart = True
+            safety = 0
+            while restart:
+                if(safety > 100):
                     break
+                restart = False
 
-                # update current column after every successful insertion
-                self.update_column(col)
+                for col in range(self.length):
+                    if restart:
+                        print("here")
+                        break
+                    # loop through unused numbers for a given row
+                    skip = 0
+                    for num in temp_arr:
+                        # check if the number can go in that column and square
+                        # if it can't, continue to next number in unused
+                        if(self.check_col(num, self.v_rows[col])):
+                            skip += 1
+                            # if skip and col add to length, restart the whole while loop
+                            if((skip + col) == self.length):
+                                print("zero at: ({},{})".format(row,col))
+                                # reset temparray with num at front
+                                restart = True
+                                safety += 1
+                                temp_arr = self.unused[row]
+                                temp_arr.remove(num)
+                                temp_arr.insert(0, num)
+                                # apply changes to self.unused, too
+                                self.unused[row].remove(num)
+                                self.unused[row].insert(0,num)
+                                print("ta",temp_arr)
+                                # start loop over for entire row
+                                break
+                            continue
+                        if(self.check_square(num, row, col)):
+                            skip += 1
+                            if((skip + col) == self.length):
+                                print("zero at: ({},{})".format(row,col))
+                                # reset temparray with num at front
+                                restart = True
+                                safety += 1
+                                temp_arr = self.unused[row]
+                                temp_arr.remove(num)
+                                temp_arr.insert(0, num)
+                                # apply changes to self.unused, too
+                                self.unused[row].remove(num)
+                                self.unused[row].insert(0,num)
+                                print("ta",temp_arr)
+                                # start loop over for entire row
+                                break
+                            continue
+                        # if number passes tests, insert it into row and column,
+                        # remove the number from unused (since it is now used),
+                        # break the loop through unused, go to next col, space
+                        self.h_rows[row][col] = num
+                        temp_arr.remove(num)
+                        skip = 0
+                        break
+                    # update current column after every successful insertion
+                    self.update_column(col)
 
-                # update square after every successful insertion
-                self.update_square(row, col)
+                    # update square after every successful insertion
+                    self.update_square(row, col)
 
 
         # delete
