@@ -125,10 +125,25 @@ class Sudoku(object):
     #     for row in self.board:
     #         print(row)
     def print_board(self):
-        for row in self.h_rows:
-            if (self.h_rows.index(row)%3 == 0):
+        for row in self.board:
+            print_text = ""
+            row_copy = list(row)
+            row_copy = map(self.alpha, row_copy)
+            # for j in row_copy:
+            #     row_copy[row_copy.index(j)] = str(j)
+            for i in range(self.unit_cell):
+                print_text += " ".join(row_copy[(i*self.unit_cell):(i*self.unit_cell)+self.unit_cell])
+                print_text += '   '
+            if (self.board.index(row)%self.unit_cell == 0):
                 print("")
-            print("{}\t{}\t{}".format(row[0:3],row[3:6],row[6:]))
+            print(print_text)
+            # print(print_text.format(row[0:3],row[3:6],row[6:]))
+
+    def alpha(self, item):
+        if(item > 9):
+            return chr(item+55)
+        else: 
+            return str(item)
 
     def shuffle_unused(self):
         self.unused = []
@@ -138,9 +153,8 @@ class Sudoku(object):
             random.shuffle(arr)
             self.unused.append(arr)
 
-
 #tests
-test = Sudoku(3)
+test = Sudoku(5)
 print("")
 print("TESTS RUNNING:")
 
@@ -155,7 +169,7 @@ else:
 
 arr = []
 for i in test.board:
-    if(sum(i) != sum(range(1,10))):
+    if(sum(i) != sum(range(1,test.length+1))):
         arr.append(test.board.index(i))
 if(arr == []):
     print("PASS - SUM ROWS")
@@ -164,7 +178,7 @@ else:
 
 arr = []
 for i in test.v_rows:
-    if(sum(i) != sum(range(1,10))):
+    if(sum(i) != sum(range(1,test.length+1))):
         arr.append(test.v_rows.index(i))
 if(arr == []):
     print("PASS - SUM COLS")
@@ -173,13 +187,12 @@ else:
 
 arr = []
 for i in test.squares:
-    if(sum(i) != sum(range(1,10))):
+    if(sum(i) != sum(range(1,test.length+1))):
         arr.append(test.squares.index(i))
 if(arr == []):
     print("PASS - SUM SQUARES")
 else:
     print("FAIL - SUM SQUARES: {}".format(arr))
-
 
 for i in test.board:
     arr = []
@@ -188,8 +201,6 @@ for i in test.board:
             arr.append(j)
     if(arr != []):
         print("ROW: {} MISSING {}".format(test.board.index(i),arr))
-    # else:
-    #     print("ROWS HAVE ALL NUMBERS")
 
 for i in test.v_rows:
     arr = []
@@ -198,8 +209,6 @@ for i in test.v_rows:
             arr.append(j)
     if(arr != []):
         print("COL: {} MISSING {}".format(test.v_rows.index(i),arr))
-    # else:
-    #     print("COLS HAVE ALL NUMBERS")
 
 for i in test.squares:
     arr = []
@@ -208,8 +217,21 @@ for i in test.squares:
             arr.append(j)
     if(arr != []):
         print("SQUARE: {} MISSING {}".format(test.squares.index(i),arr))
-    # else:
-    #     print("SQUARES HAVE ALL NUMBERS")
 
+
+for i in range(test.length):
+    for j in range(1,test.length+1):
+        if(test.board[i].count(j) != 1):
+            print("FAILURE: ROW {} MISSING OR ADDITIONAL '{}'".format(i,j))
+
+for i in range(test.length):
+    for j in range(1,test.length+1):
+        if(test.v_rows[i].count(j) != 1):
+            print("FAILURE: COL {} MISSING OR ADDITIONAL '{}'".format(i,j))
+
+for i in range(test.length):
+    for j in range(1,test.length+1):
+        if(test.squares[i].count(j) != 1):
+            print("FAILURE: SQU {} MISSING OR ADDITIONAL '{}'".format(i,j))
 
 
