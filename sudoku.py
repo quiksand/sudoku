@@ -11,7 +11,7 @@ class Sudoku(object):
         self.h_rows = []
         self.v_rows = []
         self.generate_board()
-        # self.print_board()
+        self.print_board()
 
     def generate_board(self):
         for i in range(self.length):
@@ -23,79 +23,56 @@ class Sudoku(object):
             self.h_rows.append([0] * self.length)
             self.v_rows.append([0] * self.length)
             self.squares.append([0] * self.length)
-
-        #delete
-        print("self.h_rows")
-        for i in range(self.length):
-            print(self.h_rows[i])
-        print("\n")
-        print("self.v_rows")
-        for i in range(self.length):
-            print(self.v_rows[i])
-        print("\n")
-        print("self.unused")
-        for i in range(self.length):
-            print(self.unused[i])
-        print("\n")
-        #/delete
-
         # main seed function
         # go through board cell by cell
-        for row in range(self.length):
-            # used_row = []
-            for col in range(self.length):
-                # loop through unused numbers for a given row
-                skip = 0
-                for num in self.unused[row]:
-                    # check if the number can go in that column and square
-                    # if it can't, continue to next number in unused
-                    print("skip", skip)
-                    if(self.check_col(num, self.v_rows[col])):
-                        skip += 1
-                        if((skip + col) == self.length):
-                            print("zero at: ({},{})".format(row,col))
-                        continue
-                    if(self.check_square(num, row, col)):
-                        skip += 1
-                        if((skip + col) == self.length):
-                            print("zero at: ({},{})".format(row,col))
-                        continue
-                    # if number passes tests, insert it into row and column,
-                    # remove the number from unused (since it is now used),
-                    # break the loop through unused, go to next col, space
-                    self.h_rows[row][col] = num
-                    self.unused[row].remove(num)
-                    skip = 0
+        restart_row = True
+        loop_safety = 0
+        while(restart_row):
+            if(loop_safety>1000):
+                return 1
+            self.shuffle_unused()
+            restart_row = False
+            for row in range(self.length):
+                if(restart_row):
                     break
-
-                # update current column after every successful insertion
-                self.update_column(col)
-
-                # update square after every successful insertion
-                self.update_square(row, col)
-
-
-        # delete
-        print("\n")
-        print("self.unused")
-        for i in range(self.length):
-            print(self.unused[i])
-        print("\n")
-        print("self.h_rows")
-        for i in range(self.length):
-            print(self.h_rows[i])
-        print("\n")
-        print("self.v_rows")
-        for i in range(self.length):
-            print(self.v_rows[i])
-        print("\n")
-        print("self.squares")
-        for i in range(self.length):
-            print(self.squares[i])
-        print("\n")
-        # /delete
-
+                restart = True
+                temp_arr = list(self.unused[row])
+                safety = 0
+                self.h_rows[row] = [0] * self.length
+                while restart:
+                    if(safety > 100):
+                        print("safety exit - never going to happen")
+                        print("FAILED ROW: {}".format(row))
+                        # restart = False
+                        restart_row = True
+                        break
+                        # return 1
+                    restart = False
+                    for col in range(self.length):
+                        for num in temp_arr:
+                            self.h_rows[row][col] = 0
+                            self.update_column(col)
+                            self.update_square(row, col)
+                            if(self.check_col(num, self.v_rows[col])):
+                                continue
+                            if(self.check_square(num, row, col)):
+                                continue
+                            self.h_rows[row][col] = num
+                            temp_arr.remove(num)
+                            self.update_column(col)
+                            self.update_square(row, col)
+                            break
+                    if(0 in self.h_rows[row]):
+                        index = row
+                        for r in range(index):
+                            print("ROW {}:  {}\t{}\t{}".format(r, self.h_rows[r][0:3],self.h_rows[r][3:6],self.h_rows[r][6:]))
+                            print("")
+                        temp_arr = list(self.unused[row])
+                        random.shuffle(temp_arr)
+                        restart = True
+                        safety += 1
         self.board = self.h_rows
+        return 0
 
     def check_col(self, test_num, col):
         return test_num in col
@@ -144,9 +121,95 @@ class Sudoku(object):
     def check_square(self, test_num, row, col):
         return test_num in self.squares[self.get_square_index(row,col)]
 
+    # def print_board(self):
+    #     for row in self.board:
+    #         print(row)
     def print_board(self):
-        for row in self.board:
-            print(row)
+        for row in self.h_rows:
+            if (self.h_rows.index(row)%3 == 0):
+                print("")
+            print("{}\t{}\t{}".format(row[0:3],row[3:6],row[6:]))
 
-test = Sudoku()
-print(test.get_square_index(8,8))
+    def shuffle_unused(self):
+        self.unused = []
+        for i in range(self.length):
+            # generate list of numbers in random order
+            arr = range(1, self.length +1)
+            random.shuffle(arr)
+            self.unused.append(arr)
+
+
+#tests
+test = Sudoku(3)
+print("")
+print("TESTS RUNNING:")
+
+arr = []
+for i in test.board:
+    if(0 in i):
+        arr.append(test.board.index(i))
+if(arr == []):
+    print("PASS - NO ZEROES")
+else:
+    print("FAIL - ZEROES - ROWS: {}".format(arr))
+
+arr = []
+for i in test.board:
+    if(sum(i) != sum(range(1,10))):
+        arr.append(test.board.index(i))
+if(arr == []):
+    print("PASS - SUM ROWS")
+else:
+    print("FAIL - SUM ROWS: {}".format(arr))
+
+arr = []
+for i in test.v_rows:
+    if(sum(i) != sum(range(1,10))):
+        arr.append(test.v_rows.index(i))
+if(arr == []):
+    print("PASS - SUM COLS")
+else:
+    print("FAIL - SUM COLS: {}".format(arr))
+
+arr = []
+for i in test.squares:
+    if(sum(i) != sum(range(1,10))):
+        arr.append(test.squares.index(i))
+if(arr == []):
+    print("PASS - SUM SQUARES")
+else:
+    print("FAIL - SUM SQUARES: {}".format(arr))
+
+
+for i in test.board:
+    arr = []
+    for j in range(1,test.length+1):
+        if j not in i:
+            arr.append(j)
+    if(arr != []):
+        print("ROW: {} MISSING {}".format(test.board.index(i),arr))
+    # else:
+    #     print("ROWS HAVE ALL NUMBERS")
+
+for i in test.v_rows:
+    arr = []
+    for j in range(1,test.length+1):
+        if j not in i:
+            arr.append(j)
+    if(arr != []):
+        print("COL: {} MISSING {}".format(test.v_rows.index(i),arr))
+    # else:
+    #     print("COLS HAVE ALL NUMBERS")
+
+for i in test.squares:
+    arr = []
+    for j in range(1,test.length+1):
+        if j not in i:
+            arr.append(j)
+    if(arr != []):
+        print("SQUARE: {} MISSING {}".format(test.squares.index(i),arr))
+    # else:
+    #     print("SQUARES HAVE ALL NUMBERS")
+
+
+
